@@ -6,7 +6,6 @@ Example Code
 import re
 from collections.abc import Iterable
 from simple_atm_controller.pin import Pin, PinValidationRule
-from simple_atm_controller.account import Account
 from simple_atm_controller.atm_controller import AtmController
 from tests.data_model import DataBase
 
@@ -42,7 +41,7 @@ def check_valance():
     print("Check Valance Output >> (00-00, shin10256)")
 
     # Input pin number
-    input_pin = "00-00"
+    input_pin = "00-01"
     # Pin number verification and objectification
     pin = Pin(input_pin, rule=CustomPinNumberRule())
 
