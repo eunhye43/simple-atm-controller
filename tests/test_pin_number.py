@@ -60,12 +60,12 @@ class PinNumberTestCase(unittest.TestCase):
             (NotRule(), False),
         ]
 
-        for rule, result in testcase:
+        for rule, expect in testcase:
             try:
                 PinNumber("Something", rule)
-                self.assertTrue(result)
+                self.assertTrue(expect)
             except InvalidValidationRule:
-                self.assertFalse(result)
+                self.assertFalse(expect)
 
 
 if __name__ == '__main__':

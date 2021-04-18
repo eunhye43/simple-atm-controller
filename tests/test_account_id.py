@@ -70,12 +70,12 @@ class AccountIdTestCase(unittest.TestCase):
             (NotRule(), False),
         ]
 
-        for rule, result in testcase:
+        for rule, expect in testcase:
             try:
                 AccountId(self.pin_number, "something", rule)
-                self.assertTrue(result)
+                self.assertTrue(expect)
             except InvalidValidationRule:
-                self.assertFalse(result)
+                self.assertFalse(expect)
 
 
 if __name__ == '__main__':
