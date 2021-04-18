@@ -24,10 +24,7 @@ class DataBase:
             lambda x: (x[0], x[1]) == (pin_number, account_id),
             self.records
         ))
-        if result:
-            return result[0][2]
-        else:
-            raise RuntimeError("DB Error: Can't find the account")
+        return result[0][2] if result else None
 
     def update_valance(self, pin_number, account_id, dollar):
         """Modify the balance of the account"""
@@ -41,6 +38,3 @@ class DataBase:
         print("< CASH BIN TOTAL >")
         for item in self.records:
             print("Record(pin=%s, account=%s, valance=%s)" % tuple(item))
-
-# Database for Sample Code
-CASH_BIN = DataBase()

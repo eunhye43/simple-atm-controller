@@ -1,46 +1,68 @@
 from collections.abc import Iterable
 from abc import ABCMeta, abstractmethod
-from .pin_number import PinNumber
-from .account_id import AccountId
+from .pin import Pin
+from .account import Account
 from .exceptions import (
     AtmControllerException, AtmControllerInputException, AtmControllerQueryException
 )
 
 
 class AtmController(metaclass=ABCMeta):
+    """
+    It is a controller that performs the functions of ATM.
+    The controller supports the following functions
+        - Receive pin and search for registered account.(find_accounts)
+        - Receives an account and returns the balance of the account.(get_valance)
+        - Receives an account and (withdraw) or (deposit) dollars from that account.
 
-    def find_accounts(self, pin_number: PinNumber) -> list:
-        if not isinstance(pin_number, PinNumber):
-            raise AtmControllerInputException("pin_number", "PinNumber")
-        results = self.find_accounts_query(pin_number.pin_number)
+    In order to use the controller,
+    you need to define the access method to the cash bin to the controller.
+    The controller needs to know the following query to access the cash bin.
+        - Query to search account through pin
+        - Query to check the balance of the account
+        - Query to change the balance of that account
+    """
+
+    def __init__(self, model=None):
+        self.model = model
+
+    def find_accounts(self, pin: Pin) -> list:
+        if not isinstance(pin, Pin):
+            raise AtmControllerInputException("pin", "Pin")
+        results = self.find_accounts_query(pin.pin_number)
         if not isinstance(results, Iterable):
             raise AtmControllerQueryException('find_accounts_query', 'Iterable')
-        return [AccountId(pin_number, account_id) for account_id in results]
+        return [Account(pin, account_id) for account_id in results]
 
-    def get_valance(self, account_id: AccountId) -> int:
-        if not isinstance(account_id, AccountId):
-            raise AtmControllerInputException("account_id", "AccountId")
-        result = self.get_valance_query(*account_id.items)
-        if not isinstance(result, int):
+    def get_valance(self, account: Account) -> int:
+        if not isinstance(account, Account):
+            raise AtmControllerInputException("account", "Account")
+        result = self.get_valance_query(*account.items)
+        if not (isinstance(result, int) or result is None):
             raise AtmControllerQueryException('get_valance_query', 'int')
         return result
 
-    def deposit(self, account_id: AccountId, dollar: int):
-        if not isinstance(account_id, AccountId):
-            raise AtmControllerInputException("account_id", "AccountId")
-        if not (isinstance(dollar, int) and 0 < dollar):
+    def deposit(self, account: Account, dollar: int):
+        if not isinstance(account, Account):
+            raise AtmControllerInputException("account", "Account")
+        if not isinstance(dollar, int):
             raise AtmControllerInputException("dollar", "int")
-        self.update_valance_query(*account_id.items, dollar)
+        if dollar < 0:
+            raise AtmControllerException("Negative values cannot be entered for 'dollar'")
+        self.update_valance_query(*account.items, dollar)
 
-    def withdraw(self, account_id: AccountId, dollar: int):
-        if not isinstance(account_id, AccountId):
+    def withdraw(self, account: Account, dollar: int):
+        if not isinstance(account, Account):
             raise AtmControllerInputException("account_id", "AccountId")
-        if not (isinstance(dollar, int) and 0 < dollar):
+        if not isinstance(dollar, int):
             raise AtmControllerInputException("dollar", "int")
-        if dollar <= self.get_valance(account_id):
-            self.update_valance_query(*account_id.items, -dollar)
+        if dollar < 0:
+            raise AtmControllerException("Negative values cannot be entered for 'dollar'")
+        if dollar <= self.get_valance(account):
+            self.update_valance_query(*account.items, -dollar)
+            return True, "success"
         else:
-            raise AtmControllerException("There is insufficient balance in the account")
+            return False, "insufficient balance"
 
     @abstractmethod
     def find_accounts_query(self, pin_number) -> Iterable:

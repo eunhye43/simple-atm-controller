@@ -5,9 +5,10 @@ Example Code
 """
 import re
 from collections.abc import Iterable
-from simple_atm_controller.pin_number import PinNumber, PinNumberValidationRule
-from simple_atm_controller.account_id import AccountId
+from simple_atm_controller.pin import Pin, PinValidationRule
+from simple_atm_controller.account import Account
 from simple_atm_controller.atm_controller import AtmController
+from tests.data_model import DataBase
 
 
 class MyAtmController(AtmController):
@@ -17,16 +18,16 @@ class MyAtmController(AtmController):
     """
 
     def find_accounts_query(self, pin_number) -> Iterable:
-        return CASH_BIN.find_accounts(pin_number)
+        return self.model.find_accounts(pin_number)
 
     def get_valance_query(self, pin_number, account_id) -> int:
-        return CASH_BIN.get_valance(pin_number, account_id)
+        return self.model.get_valance(pin_number, account_id)
 
     def update_valance_query(self, pin_number, account_id, dollar):
-        CASH_BIN.update_valance(pin_number, account_id, dollar)
+        self.model.update_valance(pin_number, account_id, dollar)
 
 
-class CustomPinNumberRule(PinNumberValidationRule):
+class CustomPinNumberRule(PinValidationRule):
     """
     PinNumber Validation Rule
     - Write a rule to verify the pin number
@@ -36,70 +37,23 @@ class CustomPinNumberRule(PinNumberValidationRule):
         return bool(re.search(r"\d{2}-\d{2}", pin_number))
 
 
-class DataBase:
-    """
-    Virtual data model class to run the sample code
-    """
-
-    def __init__(self):
-        self.records = [
-            # PIN, AccountId, Valance
-            ["00-00", "shin10256", 0],
-            ["00-01", "shino1025", 73],
-            ["00-01", "shino102566", 23],
-            ["00-02", "iml1111", 100_000],
-            ["00-03", "imiml", 2312],
-        ]
-
-    def find_accounts(self, pin_number):
-        """Returns the list of account IDs with the received Pin Number"""
-        result =  filter(lambda x: x[0] == pin_number, self.records)
-        return [record[1] for record in result]
-
-    def get_valance(self, pin_number, account_id):
-        """Return the balance of the account"""
-        result = list(filter(
-            lambda x: (x[0], x[1]) == (pin_number, account_id),
-            self.records
-        ))
-        if result:
-            return result[0][2]
-        else:
-            raise RuntimeError("DB Error: Can't find the account")
-
-    def update_valance(self, pin_number, account_id, dollar):
-        """Modify the balance of the account"""
-        for record in self.records:
-            if (record[0], record[1]) == (pin_number, account_id):
-                record[2] += dollar
-                return
-
-    def print_all_records(self):
-        """Print all information of current CASH BIN"""
-        print("< CASH BIN TOTAL >")
-        for item in self.records:
-            print("Record(pin=%s, account=%s, valance=%s)" % tuple(item))
-
-# Database for Sample Code
-CASH_BIN = DataBase()
-
-
 def check_valance():
     """Check the balance for the entered account"""
-    print("Check Valance Output >>")
+    print("Check Valance Output >> (00-00, shin10256)")
 
     # Input pin number
     input_pin = "00-00"
     # Pin number verification and objectification
-    pin_number = PinNumber(input_pin, rule=CustomPinNumberRule())
+    pin = Pin(input_pin, rule=CustomPinNumberRule())
 
     # Atm controller call and account selection
-    atm_controller = MyAtmController()
-    accounts = atm_controller.find_accounts(pin_number)
+    CASH_BIN = DataBase()
+    atm_controller = MyAtmController(CASH_BIN)
+    accounts = atm_controller.find_accounts(pin)
     selected_account = accounts[0]
 
     # Print the current balance of the account
-    print("%s's Valance: %s" % (
+    print("%s's Valance: %s \n" % (
         selected_account,
         atm_controller.get_valance(selected_account)
     ))
@@ -107,13 +61,14 @@ def check_valance():
 
 def send_dollar():
     """Deposit and withdrawal sample code"""
-    print("Send Dollar Output >>")
+    print("Send Dollar Output >> shino1025 => shin102566")
     # Pin number verification and objectification
-    pin_number = PinNumber("00-01", rule=CustomPinNumberRule())
+    pin = Pin("00-01", rule=CustomPinNumberRule())
 
     # Select sending and receiving accounts
-    atm_controller = MyAtmController()
-    src_id, tgt_id = atm_controller.find_accounts(pin_number)
+    CASH_BIN = DataBase()
+    atm_controller = MyAtmController(CASH_BIN)
+    src_id, tgt_id = atm_controller.find_accounts(pin)
 
     # Deduct the amount from the sending account
     # Increasing the amount in the receiving account

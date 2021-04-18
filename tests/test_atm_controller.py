@@ -1,10 +1,12 @@
 import unittest
 from collections.abc import Iterable
 from simple_atm_controller.atm_controller import AtmController
-from simple_atm_controller.pin_number import PinNumber
-from simple_atm_controller.account_id import AccountId
+from simple_atm_controller.pin import Pin
+from simple_atm_controller.account import Account
 from simple_atm_controller.exceptions import (
-    AtmControllerInputException, AtmControllerQueryException
+    AtmControllerInputException,
+    AtmControllerQueryException,
+    AtmControllerException
 )
 
 
@@ -20,8 +22,8 @@ class AtmControllerTestCase(unittest.TestCase):
                 pass
 
         self.controller = TestAtmController
-        self.pin_number = PinNumber("P0001")
-        self.account_id = AccountId(self.pin_number, "A0001")
+        self.pin_number = Pin("P0001")
+        self.account_id = Account(self.pin_number, "A0001")
 
     def test_allocate_atm_controller(self):
         self.controller()
@@ -47,7 +49,7 @@ class AtmControllerTestCase(unittest.TestCase):
                 accounts = module.find_accounts(pin_i)
                 self.assertEqual(True, expect)
                 for account_i in accounts:
-                    self.assertTrue(isinstance(account_i, AccountId))
+                    self.assertTrue(isinstance(account_i, Account))
                     self.assertEqual(account_i.pin_number, pin_i.pin_number)
             except AtmControllerInputException:
                 self.assertEqual(False, expect)
@@ -74,5 +76,67 @@ class AtmControllerTestCase(unittest.TestCase):
             (11111, False),
         ]
         for account_i, expect in testcase:
+            try:
+                module.get_valance(account_i)
+                self.assertEqual(expect, True)
+            except AtmControllerInputException:
+                self.assertEqual(expect, False)
+
+    def test_invalid_get_valance_query(self):
+
+        class InvalidController(self.controller):
+            def get_valance_query(self, pin_number, account_id) -> int:
+                return "True"
+
+        module = InvalidController()
+        try:
+            module.get_valance(self.account_id)
+            self.assertTrue(False)
+        except AtmControllerQueryException:
             pass
+
+    def test_deposit(self):
+        module = self.controller()
+        testcase = [
+            (self.account_id, 100, "success"),
+            (self.account_id, 0, "success"),
+            (self.pin_number, 100, "input_exception"),
+            ("P0001", 100, "input_exception"),
+            (11111, 100, "input_exception"),
+            (self.account_id, "100", "input_exception"),
+            (self.account_id, -100, "exception"),
+        ]
+
+        for account_i, dollar, expect in testcase:
+            try:
+                module.deposit(account_i, dollar)
+                self.assertEqual(expect, "success")
+            except AtmControllerInputException:
+                self.assertEqual(expect, "input_exception")
+            except AtmControllerException:
+                self.assertEqual(expect, "exception")
+
+    def test_withdraw(self):
+        module = self.controller()
+        testcase = [
+            (self.account_id, 10, "success", True),
+            (self.account_id, 0, "success", True),
+            (self.account_id, 11, "success", False),
+            (self.account_id, 100, "success", False),
+            (self.pin_number, 10, "input_exception", False),
+            ("P0001", 10, "input_exception", False),
+            (11111, 10, "input_exception", False),
+            (self.account_id, "100", "input_exception", False),
+            (self.account_id, -10, "exception", False),
+        ]
+
+        for account_i, dollar, expect, expect_status in testcase:
+            try:
+                result_status, _ = module.withdraw(account_i, dollar)
+                self.assertEqual(expect, "success")
+                self.assertEqual(expect_status, result_status)
+            except AtmControllerInputException:
+                self.assertEqual(expect, "input_exception")
+            except AtmControllerException:
+                self.assertEqual(expect, "exception")
 

@@ -1,5 +1,5 @@
 
-class InvalidPinNumber(Exception):
+class InvalidPin(Exception):
 
     def __init__(self, param):
         self._param = param
@@ -19,7 +19,7 @@ class InvalidValidationRule(Exception):
                f"Then, rule valdiation function must return to True/False."
 
 
-class InvalidAccountId(Exception):
+class InvalidAccount(Exception):
 
     def __init__(self, param):
         self._param = param
