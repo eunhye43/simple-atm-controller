@@ -39,7 +39,7 @@ ATM 컨트롤러를 사용하기 위해서는 당신의 시스템에서 사용�
 
 예를 들기 위해, 간단한 DataBase 클래스를 구현해보았습니다.
 
-(아래의 모든 코드는 **/tests/data_model.py ** **및** **example.py**에서 확인하실 수 있습니다)
+(아래의 모든 코드는 **/tests/data_model.py 및 example.py**에서 확인하실 수 있습니다)
 
 ```python
 class DataBase:
@@ -82,6 +82,7 @@ class DataBase:
         print("< CASH BIN TOTAL >")
         for item in self.records:
             print("Record(pin=%s, account=%s, valance=%s)" % tuple(item))
+
 ```
 
 ATM 컨트롤러는 해당 Data Model에 대하여 아래와 같은 접근 방법을 명시해주어야 합니다.
@@ -111,6 +112,7 @@ class MyAtmController(AtmController):
 
     def update_valance_query(self, pin_number, account_id, dollar):
         self.model.update_valance(pin_number, account_id, dollar)
+
 ```
 
 `self.model`은 Controller Class가 Instance를 할당할 때, 입력받은 Data model를 보관하는 변수입니다.
@@ -137,7 +139,7 @@ from simple_atm_controller.pin import Pin
 
 input_pin = "00-01"
 pin = Pin(input_pin)
-# print(pin) -> Pin(00-01)
+# Pin(00-01)
 ```
 
 이때, PIN 번호를 검증하기 위한 로직을 직접 정의하고 싶다면, `PinValidationRule`  클래스를 상속받아 Custom Rule을 정의한 후, `Pin` 객체 생성시에 함께 인자로 넘겨줍니다.
@@ -161,7 +163,6 @@ pin = Pin(input_pin, rule=CustomPinNumberRule())
 ```python
 accounts = atm_controller.find_accounts(pin)
 selected_account = accounts[0]
-# print(accounts)
 # [Account(pin_number=00-01, account_id=shino1025), 
 #  Account(pin_number=00-01, account_id=shino102566)]
 ```
@@ -169,11 +170,16 @@ selected_account = accounts[0]
 해당 계정을 다시 `atm_controller`의 인자로 넘겨, 다음과 같은 기능을 사용할 수 있습니다.
 
 ```python
-# 잔액 확인
+# Get current valance method 
+# - 해당 account를 찾을 수 없을 경우, None을 반환합니다.
 valance = atm_controller.get_valance(selected_account)
-# 출금 (status는 출금 성공 여부, msg는 실패시, 실패 사유가 반환됩니다)
+
+# Withdraw method
+# - status는 출금 성공 여부, msg는 실패시 그에 대한 사유가 반환됩니다.
 status, msg = resuatm_controller.withdraw(selected_account, 30)
-# 입금
+
+# Deposit method 
+# - 주어진 요구사항 내에서 입금이 실패할 경우의 수는 없기 때문에, 별도의 성공 여부를 tracking하지 않습니다.
 atm_controller.deposit(selected_account, 30)
 ```
 
