@@ -171,15 +171,15 @@ By passing the account back as an argument to `atm_controller`, you can use the 
 
 ```python
 # Get current valance method 
-# - 해당 account를 찾을 수 없을 경우, None을 반환합니다.
+# - If the account cannot be found, it returns None.
 valance = atm_controller.get_valance(selected_account)
 
 # Withdraw method
-# - status는 출금 성공 여부, msg는 실패시 그에 대한 사유가 반환됩니다.
+# - Status is the withdrawal success or not, msg is returned the reason for failure.
 status, msg = resuatm_controller.withdraw(selected_account, 30)
 
 # Deposit method 
-# - 주어진 요구사항 내에서 입금이 실패할 경우의 수는 없기 때문에, 별도의 성공 여부를 tracking하지 않습니다.
+# - Since there is no number of cases where a deposit fails within a given requirement, we do not track success or failure separately.
 atm_controller.deposit(selected_account, 30)
 ```
 
