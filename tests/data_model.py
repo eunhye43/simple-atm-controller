@@ -27,7 +27,7 @@ class DataBase:
         return result[0][2] if result else None
 
     def update_valance(self, pin_number, account_id, dollar):
-        """Modify the balance of the account"""
+        """Modify the baladonce of the account"""
         for record in self.records:
             if (record[0], record[1]) == (pin_number, account_id):
                 record[2] += dollar

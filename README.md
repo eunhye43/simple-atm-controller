@@ -1,14 +1,13 @@
 # simple-atm-controller
-해당 Repo는 Python3을 이용하여, 간단한 ATM Controller를 구현한 것입니다.
+This Repo is a simple ATM Controller implemented by using Python3.
 
-Simple ATM Controller는 다음과 같은 기능을 제공합니다.
+The Simple ATM Controller provides the following features .
 
-- PIN 번호 검증
-- Account Id 검증
-- PIN 번호가 가진 모든 Account 호출
-- 해당 Account의 잔액 확인
-- 해당 Account에 금액 입금
-- 해당 Account에서 금액 인출
+- PIN Number Validation
+- Account Id Validation
+- Return all Accounts that PIN Number hasconfirm the balance of the Account 
+- Deposit the money to the Account 
+- Withdraw money from the Account
 
 
 
@@ -35,11 +34,9 @@ $ python3 test.py
 
 # Get Started
 
-ATM 컨트롤러를 사용하기 위해서는 당신의 시스템에서 사용하고 있는 Data Model과의 연결 과정이 필요합니다.
+To use an ATM controller, you need a connection process with the Data Model you are using in your system. For example, I implemented a simple `Database` Class.
 
-예를 들기 위해, 간단한 DataBase 클래스를 구현해보았습니다.
-
-(아래의 모든 코드는 **/tests/data_model.py ** **및** **example.py**에서 확인하실 수 있습니다)
+(All the codes below can be found at **/tests/data_model.py** and **example.py**)
 
 ```python
 class DataBase:
@@ -84,13 +81,13 @@ class DataBase:
             print("Record(pin=%s, account=%s, valance=%s)" % tuple(item))
 ```
 
-ATM 컨트롤러는 해당 Data Model에 대하여 아래와 같은 접근 방법을 명시해주어야 합니다.
+ATM controller must specify the following approaches for the corresponding Data Model.
 
-- 입력된 PIN에 속한 Account ID List를 반환하는 쿼리
-- 입력된 Account의 잔액 조회 쿼리
-- 입력된 Account의 잔액 증감 쿼리
+- Query that returns the Account ID List that belongs to the entered PIN
+- Query that checks the balance of the entered Account
+- Query that increases or decreases the balance of the entered Account
 
-해당 쿼리가 준비되었다면, 아래와 같이 ATM Controller를 상속받아, 아래의 Method를 Overriding하여 구현합니다.
+If the query is ready, inherit ATM Controller as below and implement the below method by overriding. 
 
 ```python
 from collections.abc import Iterable
@@ -113,24 +110,25 @@ class MyAtmController(AtmController):
         self.model.update_valance(pin_number, account_id, dollar)
 ```
 
-`self.model`은 Controller Class가 Instance를 할당할 때, 입력받은 Data model를 보관하는 변수입니다.
+`self.model` is a variable that holds the entered `data model` when the Controller Class assigns an Instance.
 
-당신은 해당 메소드(`find_accounts_query`, `get_valance_query`,  `update_valance_query`) 내에서 기존에 사용하던 방식 그대로 각 요구사항에 맞는 쿼리를 구현해주세요.
+In the method(`find_accounts_query`, `get_valance_query`, `update_valance_query`) ,
+you can implement queries in the same way that you used previously to meet each requirement
 
 
 
 ### Use Controller
 
-위 준비가 모두 끝났다면, 이제 `Controller`를 사용할 수 있습니다.
+If all of the above settings are ready, you can use `Controller`.
 
-먼저, `Data Model`을 불러와 `Controller`와 연결시켜 Instance를 할당하세요.
+First of all, declare `Data Model` and connect it with `Controller` to assign Instance.
 
 ```python
 CASH_BIN = DataBase()
 atm_controller = MyAtmController(CASH_BIN)
 ```
 
-사용자에게서 카드의 PIN 번호를 입력받았다고 가정할 때, 아래와 같이 PIN 객체를 생성합니다.
+Assuming that you received the user's card PIN number, create the PIN object as shown below.
 
 ```python
 from simple_atm_controller.pin import Pin
@@ -140,7 +138,8 @@ pin = Pin(input_pin)
 # print(pin) -> Pin(00-01)
 ```
 
-이때, PIN 번호를 검증하기 위한 로직을 직접 정의하고 싶다면, `PinValidationRule`  클래스를 상속받아 Custom Rule을 정의한 후, `Pin` 객체 생성시에 함께 인자로 넘겨줍니다.
+If you want to define the logic for verifying the PIN number, 
+inherit the `PinValidationRule` class, define the Custom Rule, and then hand it over as a argument when creating the `Pin` object.
 
 ```python
 from simple_atm_controller.pin import PinValidationRule
@@ -156,7 +155,7 @@ class CustomPinNumberRule(PinValidationRule):
 pin = Pin(input_pin, rule=CustomPinNumberRule())
 ```
 
-해당 pin 객체를 `atm_controller`에 넘겨, 소속된 account List를 조회한 후, 원하는 계정을 선택합니다.
+Pass the `Pin` object to `atm_controller`, check the account list that belongs to it, and select the desired account.
 
 ```python
 accounts = atm_controller.find_accounts(pin)
@@ -166,7 +165,7 @@ selected_account = accounts[0]
 #  Account(pin_number=00-01, account_id=shino102566)]
 ```
 
-해당 계정을 다시 `atm_controller`의 인자로 넘겨, 다음과 같은 기능을 사용할 수 있습니다.
+By passing the account back as an argument to `atm_controller`, you can use the following functions.
 
 ```python
 # 잔액 확인
