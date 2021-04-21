@@ -38,6 +38,7 @@ To use an ATM controller, you need a connection process with the Data Model you 
 
 (All the codes below can be found at **/tests/data_model.py** and **example.py**)
 
+
 ```python
 class DataBase:
     """
@@ -79,6 +80,7 @@ class DataBase:
         print("< CASH BIN TOTAL >")
         for item in self.records:
             print("Record(pin=%s, account=%s, valance=%s)" % tuple(item))
+
 ```
 
 ATM controller must specify the following approaches for the corresponding Data Model.
@@ -108,6 +110,7 @@ class MyAtmController(AtmController):
 
     def update_valance_query(self, pin_number, account_id, dollar):
         self.model.update_valance(pin_number, account_id, dollar)
+
 ```
 
 `self.model` is a variable that holds the entered `data model` when the Controller Class assigns an Instance.
@@ -135,7 +138,7 @@ from simple_atm_controller.pin import Pin
 
 input_pin = "00-01"
 pin = Pin(input_pin)
-# print(pin) -> Pin(00-01)
+# Pin(00-01)
 ```
 
 If you want to define the logic for verifying the PIN number, 
@@ -160,7 +163,6 @@ Pass the `Pin` object to `atm_controller`, check the account list that belongs t
 ```python
 accounts = atm_controller.find_accounts(pin)
 selected_account = accounts[0]
-# print(accounts)
 # [Account(pin_number=00-01, account_id=shino1025), 
 #  Account(pin_number=00-01, account_id=shino102566)]
 ```
@@ -168,11 +170,16 @@ selected_account = accounts[0]
 By passing the account back as an argument to `atm_controller`, you can use the following functions.
 
 ```python
-# 잔액 확인
+# Get current valance method 
+# - 해당 account를 찾을 수 없을 경우, None을 반환합니다.
 valance = atm_controller.get_valance(selected_account)
-# 출금 (status는 출금 성공 여부, msg는 실패시, 실패 사유가 반환됩니다)
+
+# Withdraw method
+# - status는 출금 성공 여부, msg는 실패시 그에 대한 사유가 반환됩니다.
 status, msg = resuatm_controller.withdraw(selected_account, 30)
-# 입금
+
+# Deposit method 
+# - 주어진 요구사항 내에서 입금이 실패할 경우의 수는 없기 때문에, 별도의 성공 여부를 tracking하지 않습니다.
 atm_controller.deposit(selected_account, 30)
 ```
 
