@@ -11,12 +11,12 @@ from simple_atm_controller.exceptions import (
 
 
 class AtmControllerTestCase(unittest.TestCase):
-
-    def setUp(self) -> None:
-        class TestAtmController(AtmController):
-            def find_accounts_query(self, pin_number) -> Iterable:
+    
+    def setUp(self) -> None: # 필요한 db 설정해주기
+        class TestAtmController(AtmController): # 메소드 안에 class객체를 넣기/ 근데 왜 이렇게 넣는걸까?
+            def find_accounts_query(self, pin_number) -> Iterable: 
                 return ["A0001", "A0002", "A0003"]
-            def get_valance_query(self, pin_number, account_id) -> int:
+            def get_valance_query(self, pin_number, account_id) -> int: 
                 return 10
             def update_valance_query(self, pin_number, account_id, dollar):
                 pass
@@ -24,40 +24,42 @@ class AtmControllerTestCase(unittest.TestCase):
         self.controller = TestAtmController
         self.pin_number = Pin("P0001")
         self.account_id = Account(self.pin_number, "A0001")
-
+    # controller 객체 실행했을 때 TestAtmController실행-
     def test_allocate_atm_controller(self):
         self.controller()
-
+    
+    # atm_controller 유효성검사(f)
     def test_invalid_atm_controller(self):
         class InvalidAtmController(AtmController):
             pass
         try:
             InvalidAtmController()
-            self.assertTrue(False)
-        except TypeError:
+            self.assertTrue(False) 
+        except TypeError: 
             pass
-
+    # pin입력했을 때 해당 계정이 잘찾아지는지 test(s)
     def test_find_account(self):
         module = self.controller()
         testcase = [
             (self.pin_number, True),
-            ("P0001", False),
-            (11111, False),
+            ("P0001", False), 
+            (11111, False), 
         ]
+        
         for pin_i, expect in testcase:
             try:
-                accounts = module.find_accounts(pin_i)
-                self.assertEqual(True, expect)
+                accounts = module.find_accounts(pin_i) 
+                self.assertEqual(True, expect) 
                 for account_i in accounts:
                     self.assertTrue(isinstance(account_i, Account))
                     self.assertEqual(account_i.pin_number, pin_i.pin_number)
             except AtmControllerInputException:
                 self.assertEqual(False, expect)
-
+                
     def test_invalid_find_account_query(self):
-
+        # 잘못된 계정 or 못찾을 때 테스트 (f)
         class InvalidController(self.controller):
-            def find_accounts_query(self, pin_number):
+            def find_accounts_query(self, pin_number): 
                 return True
 
         module = InvalidController()
@@ -66,7 +68,7 @@ class AtmControllerTestCase(unittest.TestCase):
             self.assertTrue(False)
         except AtmControllerQueryException:
             pass
-
+    # testcase를 통한 잔액확인
     def test_get_valance(self):
         module = self.controller()
         testcase = [
@@ -83,7 +85,7 @@ class AtmControllerTestCase(unittest.TestCase):
                 self.assertEqual(expect, False)
 
     def test_invalid_get_valance_query(self):
-
+    # 핀넘버, 계좌id 넣었을 때 유효하지 않음 -> 잔액 에러 test(f)
         class InvalidController(self.controller):
             def get_valance_query(self, pin_number, account_id) -> int:
                 return "True"
@@ -94,7 +96,7 @@ class AtmControllerTestCase(unittest.TestCase):
             self.assertTrue(False)
         except AtmControllerQueryException:
             pass
-
+    # 예금했을 때 계좌, 잔액확인 test(invalid값 들어왔을때 예외처리)
     def test_deposit(self):
         module = self.controller()
         testcase = [
@@ -115,9 +117,9 @@ class AtmControllerTestCase(unittest.TestCase):
                 self.assertEqual(expect, "input_exception")
             except AtmControllerException:
                 self.assertEqual(expect, "exception")
-
+    # 출금했을 때 계좌, 잔액 확인 test(invalid값 들어왔을때 예외처리)
     def test_withdraw(self):
-        module = self.controller()
+        module = self.controller() 
         testcase = [
             (self.account_id, 10, "success", True),
             (self.account_id, 0, "success", True),
